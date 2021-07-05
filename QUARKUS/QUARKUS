@@ -1,0 +1,14 @@
+# Init 
+$ mvn io.quarkus:quarkus-maven-plugin:1.12.2.Final:create     -DprojectGroupId=cloud.saberkan     -DprojectArtifactId=hello-world     -DclassName="cloud.saberkan.hello.world.GreetingResource"     -Dpath="/hello"
+$ cd hello-world
+
+# Run in dev mode
+$ mvn compile quarkus:dev
+$ curl -w "\n" http://localhost:8080/hello
+
+Edit class and run curl again.
+
+# Run container in native mode  : Fails dont demo
+$ mvn package -Pnative # use sudo
+$ podman build -f src/main/docker/Dockerfile.native -t quarkus/hello-world .
+$ podman run -i --rm -p 8080:8080 quarkus/hello-rld

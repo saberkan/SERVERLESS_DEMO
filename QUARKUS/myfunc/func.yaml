@@ -1,0 +1,12 @@
+name: myfunc
+namespace: serverless-demo
+runtime: quarkus
+image: myfunc:latest
+imageDigest: ""
+trigger: http
+builder: default
+builderMap:
+  default: quay.io/boson/faas-quarkus-jvm-builder
+  jvm: quay.io/boson/faas-quarkus-jvm-builder
+  native: quay.io/boson/faas-quarkus-native-builder
+envVars: {}

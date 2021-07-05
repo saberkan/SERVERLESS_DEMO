@@ -1,0 +1,3 @@
+kn source apiserver create orange-event-source --sink broker:default --resource "event:v1" --service-account events-sa --mode Resource
+kn service create orange-event-displayer --image quay.io/openshift-knative/knative-eventing-sources-event-display:latest
+kn trigger create orange-trigger --sink ksvc:orange-event-displayer

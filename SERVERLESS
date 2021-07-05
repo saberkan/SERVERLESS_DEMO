@@ -1,0 +1,85 @@
+# Installation
+Install serverless
+
+Deploy serving (to allow CRD route, service etc.)
+From web console then check installed
+$ oc get knativeserving.operator.knative.dev/knative-serving -n knative-serving --template='{{range .status.conditions}}{{printf "%s=%s\n" .type .status}}{{end}}'
+
+Deploy Eventing (allow brokers and channels)
+$ oc get knativeeventing.operator.knative.dev/knative-eventing \
+  -n knative-eventing \
+  --template='{{range .status.conditions}}{{printf "%s=%s\n" .type .status}}{{end}}'
+
+
+# Create serverless application
+$ oc new-project serverless-demo
+$ kn service create hello --image docker.io/openshift/hello-openshift --env RESPONSE="Hello Serverless!"
+$ oc get ksvc hello
+$ curl http://hello-serverless-demo.apps.cluster-0764.0764.sandbox518.opentlc.com
+Knative leverages OpenShift Container Platform TLS termination to provide routing for Knative services. When a Knative service is created, a OpenShift Container Platform route is automatically created for the service. This route is managed by the OpenShift Serverless Operator. The OpenShift Container Platform route exposes the Knative service through the same domain as the OpenShift Container Platform cluster.
+
+You can disable Operator control of OpenShift Container Platform routing so that you can configure a Knative route to directly use your TLS certificates instead.
+
+# Tracing
+Install jaeger operator
+
+$ cat <<EOF | oc create -f -
+apiVersion: jaegertracing.io/v1
+kind: Jaeger
+metadata:
+  name: jaeger
+  namespace: knative-serving
+EOF
+
+apiVersion: operator.knative.dev/v1alpha1
+kind: KnativeServing
+metadata:
+  name: knative-serving
+  namespace: knative-serving
+spec:
+  config:
+    tracing:
+      sample-rate: "0.1" 
+      backend: zipkin 
+      zipkin-endpoint: http://jaeger-collector.knative-serving.svc.cluster.local:9411/api/v2/spans 
+      debug: "false" 
+
+# Revisions
+$ kn service list
+
+Tag deployed version
+$ kn service update hello --tag hello-hwhjd-1=v1
+
+Update new version and tag it
+$ kn service update hello --image docker.io/openshift/hello-openshift --env RESPONSE="Hola Serverless!" 
+$ kn service list
+$ kn service update hello --tag hello-vxxrb-3=v2
+
+Split traffic
+$ kn service update hello --traffic v1=50 --traffic v2=50 
+
+# Event
+Type of events sources:
+$ kn source list-types
+
+Create service that shows events
+$ kn service create event-display \
+    --image quay.io/openshift-knative/knative-eventing-sources-event-display:latest
+
+Create ping source that triggers the event 
+$ kn source ping create test-ping-source \
+        --schedule "*/2 * * * *" \
+        --data '{"message": "Hello world!"}' \
+        --sink ksvc:event-display
+
+check: See logs of service 
+
+# Go further: 
+use brokers with triggers, or channels with subscribers.
+
+# Make demo : https://docs.openshift.com/container-platform/4.7/serverless/event_sources/serverless-apiserversource.html
+
+
+Use kn function (# cannot do on a podman environement)
+https://developers.redhat.com/blog/2021/01/04/create-your-first-serverless-function-with-red-hat-openshift-serverless-functions/
+https://openshift-knative.github.io/docs/docs/functions/quickstart-functions.html

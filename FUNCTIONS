@@ -1,0 +1,7 @@
+podman system service --time=0 tcp:0.0.0.0:1234 &
+export DOCKER_HOST=tcp://127.0.0.1:1234
+
+
+kn func create
+kn func build
+kn func run
